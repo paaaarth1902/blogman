@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="content-section py-3 px-4 mb-4">
+  <h2 class="mb-4">Create New Post</h2>
+  <form id="createPostForm">
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" class="form-control" id="title" name="title" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label for="content" class="form-label">Content</label>
+      <textarea class="form-control" id="content" name="content" rows="8" required></textarea>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary" id="submitBtn">Create Post</button>
+    </div>
+  </form>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script type="module">
+    import {
+    getErrorMessage,
+    hideModal,
+    showModal,
+    } from "/static/js/utils.js";
+    import {getToken} from '/static/js/auth.js';
+
+    const createForm = document.getElementById("createPostForm");
+
+    createForm.addEventListener("submit", async (event) => {
+    // Stop default form submission - we'll handle it with JavaScript
+    event.preventDefault();
+
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+
+    // Gather form values into a plain object {title: "...", content: "..."}
+    const formData = new FormData(createForm);
+    const postData = Object.fromEntries(formData.entries());
+
+    try {
+        // POST to our API as JSON
+        const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(postData),
+        });
+        
+        if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+
+        if (response.ok) {
+        const data = await response.json();
+        document.getElementById("successMessage").textContent =
+            `Post "${data.title}" created successfully!`;
+
+        hideModal("createPostModal");
+        showModal("successModal");
+
+        createForm.reset(); // Clear the form after successful submission
+
+        // Reload page after modal is hidden to show new post
+        document
+            .getElementById("successModal")
+            .addEventListener(
+            "hidden.bs.modal",
+            () => {
+                window.location.href = '/';
+            },
+            { once: true },
+            );
+        } else {
+        const error = await response.json();
+        document.getElementById("errorMessage").textContent =
+            getErrorMessage(error);
+
+        hideModal("createPostModal");
+        showModal("errorModal");
+         
+        }
+    } catch (error) {
+        document.getElementById("errorMessage").textContent =
+        "Network error. Please check your connection and try again.";
+        showModal("errorModal");
+    }
+    });
+        </script>
+    {% endblock scripts%}
