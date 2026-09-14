@@ -48,12 +48,13 @@
     <script type="module">
       import { getErrorMessage, showModal } from '/static/js/utils.js';
 
+      // capture all req form elements
       const registerForm = document.getElementById('registerForm');
       const passwordInput = document.getElementById('password');
       const confirmPasswordInput = document.getElementById('confirmPassword');
       const passwordError = document.getElementById('passwordError');
 
-      // Check passwords match on input
+      // Check passwords match on input - live validation
       confirmPasswordInput.addEventListener('input', () => {
         if (passwordInput.value !== confirmPasswordInput.value) {
           passwordError.classList.remove('d-none');
@@ -73,13 +74,15 @@
           return;
         }
 
+        // store email, username and password in a variable to send to in a payload to the API
         const formData = new FormData(registerForm);
         const userData = {
           username: formData.get('username'),
           email: formData.get('email'),
           password: formData.get('password'),
         };
-
+        
+        // /api/users expects username, password, email 
         try {
           const response = await fetch('/api/users', {
             method: 'POST',

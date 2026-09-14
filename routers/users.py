@@ -1,17 +1,17 @@
-from typing import Annotated # lets you attach metadata (like FastAPI field validations or dependencies) to standard Python type hints without altering the underlying type.
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, Query, BackgroundTasks # APIRouter groups endpoints, Depends handles dependencies, HTTPException raises errors, status gives HTTP codes.
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, Query, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 
-from sqlalchemy import select, func # select lets us build SQL query statements.
-from sqlalchemy.ext.asyncio import AsyncSession # AsyncSession lets us manage non-blocking database transactions.
-from sqlalchemy.orm import selectinload  # selectinload lets us eagerly load database relationships asynchronously.
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from sqlalchemy import delete as sql_delete
 
-import models # models lets us interact with database table schemas.
-from database import get_db # get_db lets us inject database sessions into routes.
-from schemas import PostResponse, UserCreate, UserPublic, UserPrivate, UserUpdate, Token, PaginatedPostsResponse, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest # Pydantic schemas let us validate incoming requests and structure outgoing responses.
+import models
+from database import get_db
+from schemas import PostResponse, UserCreate, UserPublic, UserPrivate, UserUpdate, Token, PaginatedPostsResponse, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest
 
 from datetime import timedelta
 
@@ -24,7 +24,6 @@ from starlette.concurrency import run_in_threadpool
 from image_utils import process_profile_image, upload_profile_image, delete_profile_image
 
 from botocore.exceptions import ClientError
-
 
 router = APIRouter()
 
@@ -69,7 +68,6 @@ async def create_user(user: UserCreate, db: Annotated[AsyncSession, Depends(get_
     await db.refresh(new_user)
     return new_user
 
-
 ## User Login for access token
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
@@ -86,7 +84,7 @@ async def login_for_access_token(
     user = result.scalars().first()
 
     # Verify user exists and password is correct
-    # Don't reveal which one failed (security best practice)
+    # Don't reveal which one failed to ensure no user enumeration happens
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -230,7 +228,6 @@ async def change_password(
 
     await db.commit()
     return {"message": "Password changed successfully"}
-
 
 # Fetch User details for given User ID with response following UserResponse schema
 @router.get("/{user_id}", response_model=UserPublic)
