@@ -221,3 +221,4 @@ __marimo__/
 node_modules/
 
 demo.txt
+populate_db.py

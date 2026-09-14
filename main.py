@@ -99,6 +99,14 @@ async def home(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
         },
     )
 
+@app.get("/posts/new", include_in_schema=False)
+async def create_post_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "create_post.html",
+        {"title": "Create Post"},
+    )
+
 @app.get("/posts/{post_id}", include_in_schema=False)
 async def post_page(
     request: Request,
@@ -119,7 +127,6 @@ async def post_page(
             {"post": post, "title": title},
         )
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-
 
 @app.get("/users/{user_id}/posts", include_in_schema=False, name="user_posts")
 async def user_posts_page(
